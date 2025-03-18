@@ -50,11 +50,11 @@ def load_earthquake_data():
     earthquakes_df = pd.DataFrame(earthquakes)
 
     # Convert timestamp to datetime
-    earthquakes_df['datetime'] = pd.to_datetime(earthquakes_df['time'], unit='ms').dt.strftime("%B %d, %Y %H:%M")
+    earthquakes_df['datetime'] = pd.to_datetime(earthquakes_df['time'], unit='ms').dt.strftime("%d.%m.%Y at %H:%M:%S")
     # Drop unnecessary columns
     earthquakes_df.drop("time", axis = 1, inplace=True)
 
-    return earthquakes_df
+    return earthquakes_df, start_date
 
 
 @st.cache_data

@@ -221,6 +221,7 @@ st_folium(tsunami_map, width="100%", height=300)
 
 st.dataframe(tsunami_data[['place', 'tectonic_plate', 'mag', 'depth']]
              .rename(columns={"place": "Place", "tectonic_plate": "Tectonic Plate", "mag":"Magnitude (Mw)", "depth": "Depth (km)"})
+             .reset_index(drop=True)
              .style.background_gradient(cmap='plasma')
              .hide()
              )

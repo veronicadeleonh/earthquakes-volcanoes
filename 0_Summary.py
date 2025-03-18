@@ -25,7 +25,7 @@ def get_plate_boundaries_data():
     return load_plate_boundaries()
 
 # Load Data (cached)
-earthquakes_df = get_earthquake_data()
+earthquakes_df, start_date = get_earthquake_data()
 plate_boundaries = get_plate_boundaries_data()
 earthquakes_with_plates = get_tectonic_plate_data(earthquakes_df)
 
@@ -40,12 +40,13 @@ most_recent_place = earthquakes_with_plates.iloc[0]["place"]
 most_recent_datetime = earthquakes_with_plates.iloc[0]["datetime"]
 most_recent_mag = earthquakes_with_plates.iloc[0]["mag"]
 most_recent_depth = earthquakes_with_plates.iloc[0]["depth"]
+most_recent_plate = earthquakes_with_plates.iloc[0]["tectonic_plate"]
 
 st.text(f"Most recent seismic activity registered")
 st.subheader(f"{most_recent_place}")
 
 # Create a multi-column layout
-col1, col2, col3 = st.columns(3)
+col1, col2, col3, col4 = st.columns(4)
 
 # Display the most recent earthquake details
 with col1:
@@ -56,3 +57,6 @@ with col2:
 
 with col3:
     st.metric(label="Depth", value=f"{most_recent_depth} Km", border=True)
+
+with col4:
+    st.metric(label="Tectonic Plate", value=f"{most_recent_plate}", border=True)

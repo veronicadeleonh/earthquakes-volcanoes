@@ -22,8 +22,14 @@ volcano_eruptions = get_eruptions_and_types()
 
 st.title("🌋 Volcanoes")
 
+# Count the number of eruptions per volcano
+eruption_counts = volcano_eruptions.groupby('volcano_name').size().reset_index(name='eruption_count')
+
 # Group by volcano_name and get the latest eruption details
 latest_eruptions = volcano_eruptions.sort_values('start_year', ascending=False).drop_duplicates('volcano_name')
+
+# Merge the counts back into the latest_eruptions DataFrame
+latest_eruptions = latest_eruptions.merge(eruption_counts, on='volcano_name')
 
 # Create a base map centered on the first volcano
 volcano_map = folium.Map(location=[20, 0], zoom_start=2, min_zoom=2, tiles="Esri.WorldImagery")
@@ -39,19 +45,21 @@ for _, row in latest_eruptions.iterrows():
     """
     popup = folium.Popup(popup_text, max_width=300)
 
+    marker_size = row['eruption_count'] * 0.1
+
     folium.CircleMarker(
         location=[row['latitude'], row['longitude']],
-        radius=2,
+        radius=marker_size,
         color="yellow",
         fill=True,
         fill_color="yellow",
         fill_opacity=0.8,
         popup=popup,
-        tooltip=row['volcano_name']
+        tooltip=f"{row['volcano_name']} ({row['eruption_count']} eruptions)",
     ).add_to(volcano_map)
 
 # Display the map in Streamlit
-st.title("Volcano Locations")
+st.subheader("Volcano Locations")
 st_folium(volcano_map, width="100%", height=500)
 
 st.dataframe(volcano_eruptions)

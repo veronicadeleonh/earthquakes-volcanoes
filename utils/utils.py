@@ -145,6 +145,26 @@ def load_eruption_data():
     eruptions = eruptions[['volcano_name', 'vei', 'start_year',	'latitude', 'longitude']]
     eruptions.dropna(subset=['start_year'], inplace=True)
     eruptions['vei'] = eruptions['vei'].fillna(-1)
+    eruptions["start_year"] = pd.to_numeric(eruptions['start_year'], downcast='integer', errors='coerce')
+    eruptions.rename(columns={"start_year": "year"}, errors="raise")
+
+    # Cleaning volcano names
+    volcano_names = {
+    (-20.852, -175.550): 'Hunga Tonga-Hunga Ha\'apai',
+    (-18.325, -174.365): 'Late Island',
+    (46.470, 151.280): 'Chirinkotan',
+    (45.022, 147.019): 'Ekarma',
+    (-21.338, -175.650): 'Kao',
+    (21.830, 121.180): 'Green Island',
+    (20.330, 121.750): 'Babuyan Claro',
+    (24.132, 121.926): 'Qixing Mountain'
+    }
+
+    # Update the volcano names
+    eruptions['volcano_name'] = eruptions.apply(
+        lambda row: volcano_names.get((row['latitude'], row['longitude']), row['volcano_name']),
+        axis=1
+    )
 
     # Cleaning volcanos on earth
     volcanoes_of_earth.columns = [column.lower() for column in volcanoes_of_earth.columns]
@@ -168,6 +188,11 @@ def load_eruption_data():
         "Explosion crater(?)": "Explosion crater(s)",
         "Lava dome(s) ?": "Lava dome(s)",
         "Fissure vent(s) ?": "Fissure vent(s)"
+    })
+
+    volcanoes_of_earth['epoch_period'] = volcanoes_of_earth['epoch_period'].replace({
+        "holocene":"Holoceno",
+        "pleistocene": "Pleistocene"
     })
 
     # Merging both datasets

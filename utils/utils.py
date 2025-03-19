@@ -4,6 +4,8 @@ import geopandas as gpd
 from shapely.geometry import Point
 import pandas as pd
 import streamlit as st
+import kagglehub
+import os
 
 
 @st.cache_data
@@ -125,3 +127,50 @@ def get_tectonic_plate_data(earthquakes_df):
     earthquakes_with_plates["tectonic_plate"] = earthquakes_with_plates["tectonic_plate"].replace(minor_to_major_plate)
     
     return earthquakes_with_plates
+
+
+@st.cache_data
+def load_eruption_data():
+    # Loading datasets
+    eruptions_path = kagglehub.dataset_download("jessemostipak/volcano-eruptions")
+    volcanoes_path = kagglehub.dataset_download("deepcontractor/the-volcanoes-of-earth")
+    
+    eruptions_file = os.path.join(eruptions_path, "eruptions.csv")
+    volcanoes_file = os.path.join(volcanoes_path, "The_Volcanoes_Of_Earth.csv")
+
+    eruptions = pd.read_csv(eruptions_file)
+    volcanoes_of_earth = pd.read_csv(volcanoes_file)
+
+    # Cleaning eruptions dataset
+    eruptions = eruptions[['volcano_name', 'vei', 'start_year',	'latitude', 'longitude']]
+    eruptions.dropna(subset=['start_year'], inplace=True)
+    eruptions['vei'] = eruptions['vei'].fillna(-1)
+
+    # Cleaning volcanos on earth
+    volcanoes_of_earth.columns = [column.lower() for column in volcanoes_of_earth.columns]
+    volcanoes_of_earth = volcanoes_of_earth[['volcano_name', 'volcano_type', 'epoch_period']]
+
+    volcanoes_of_earth['volcano_type'] = volcanoes_of_earth['volcano_type'].replace({
+        "Stratovolcano":"Stratovolcano(es)",
+        "Stratovolcano?": "Stratovolcano(es)",
+        "Pyroclastic cone": "Pyroclastic cone(s)",
+        "Shield": "Shield(s)",
+        "Shield?": "Shield(s)",
+        "Lava dome": "Lava dome(s)",
+        "Caldera": "Caldera(s)",
+        "Caldera(?)": "Caldera(s)",
+        "Tuff cone": "Tuff cone(s)",
+        "Complex": "Complex(es)",
+        "Lava cone": "Lava cone(s)",
+        "Lava cone(es)": "Lava cone(s)",
+        "Cone": "Cone(s)",
+        "Explosion crater": "Explosion crater(s)",
+        "Explosion crater(?)": "Explosion crater(s)",
+        "Lava dome(s) ?": "Lava dome(s)",
+        "Fissure vent(s) ?": "Fissure vent(s)"
+    })
+
+    # Merging both datasets
+    eruptions_and_types = pd.merge(eruptions, volcanoes_of_earth, on='volcano_name', how='left')
+
+    return eruptions_and_types

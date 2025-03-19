@@ -4,7 +4,6 @@ from streamlit_folium import st_folium
 import branca.colormap as cm
 import altair as alt
 
-
 from utils.utils import load_earthquake_data, load_plate_boundaries, get_tectonic_plate_data
 
 # Page Config

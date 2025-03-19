@@ -12,7 +12,7 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="auto",
     page_title="Seismic Data",
-    page_icon="🌍💥"
+    page_icon="🌍"
 )
 
 # Cache Data Loading

@@ -62,4 +62,4 @@ for _, row in latest_eruptions.iterrows():
 st.subheader("Volcano Locations")
 st_folium(volcano_map, width="100%", height=500)
 
-st.dataframe(volcano_eruptions)
+st.dataframe(eruption_counts)

@@ -146,7 +146,7 @@ def load_eruption_data():
     eruptions.dropna(subset=['start_year'], inplace=True)
     eruptions['vei'] = eruptions['vei'].fillna(-1)
     eruptions["start_year"] = pd.to_numeric(eruptions['start_year'], downcast='integer', errors='coerce')
-    eruptions.rename(columns={"start_year": "year"}, errors="raise")
+    eruptions.rename(columns={"start_year": "year"}, errors="raise", inplace=True)
 
     # Cleaning volcano names
     volcano_names = {
@@ -168,7 +168,7 @@ def load_eruption_data():
 
     # Cleaning volcanos on earth
     volcanoes_of_earth.columns = [column.lower() for column in volcanoes_of_earth.columns]
-    volcanoes_of_earth = volcanoes_of_earth[['volcano_name', 'volcano_type', 'epoch_period']]
+    volcanoes_of_earth = volcanoes_of_earth[['volcano_name', 'volcano_type', 'epoch_period', 'summit_and_elevatiuon']]
 
     volcanoes_of_earth['volcano_type'] = volcanoes_of_earth['volcano_type'].replace({
         "Stratovolcano":"Stratovolcano(es)",
@@ -195,7 +195,39 @@ def load_eruption_data():
         "pleistocene": "Pleistocene"
     })
 
-    # Merging both datasets
+    # Renaming the column to "elevation"
+    volcanoes_of_earth.rename(columns={'summit_and_elevatiuon':'elevation'}, inplace=True)
+    # Replacing manually the value for Aak volcano
+    volcanoes_of_earth.loc[1343, 'elevation'] = 2319
+    
+    # Process the elevation column
+    for index, value in volcanoes_of_earth['elevation'].items():
+        if isinstance(value, str) and "Unknown," in value:
+            volcanoes_of_earth.at[index, 'elevation'] = -99999
+        elif isinstance(value, str): 
+            volcanoes_of_earth.at[index, 'elevation'] = int(value.split()[0])
+        elif isinstance(value, (int, float)):
+            volcanoes_of_earth.at[index, 'elevation'] = int(value)
+        else:
+            volcanoes_of_earth.at[index, 'elevation'] = -99999
+
     eruptions_and_types = pd.merge(eruptions, volcanoes_of_earth, on='volcano_name', how='left')
 
     return eruptions_and_types
+
+@st.cache_data
+def load_top_10_eruptions_count(eruptions_and_types):
+    eruptions_and_types['first_eruption_year'] = eruptions_and_types.groupby('volcano_name')['year'].transform('min')
+    eruptions_and_types['last_eruption_year'] = eruptions_and_types.groupby('volcano_name')['year'].transform('max')
+
+    # Group by volcano_name, volcano_type and count eruptions
+    top_10_eruptions_count = (
+        eruptions_and_types.groupby(['volcano_name', 'volcano_type', 'first_eruption_year', 'last_eruption_year'])
+        .size()
+        .reset_index(name='eruption_count')
+        .sort_values(by='eruption_count', ascending=False)
+        .head(10)
+        .reset_index(drop=True)
+    )
+
+    return top_10_eruptions_count

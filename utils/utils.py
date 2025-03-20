@@ -215,19 +215,10 @@ def load_eruption_data():
 
     return eruptions_and_types
 
+
 @st.cache_data
-def load_top_10_eruptions_count(eruptions_and_types):
+def load_first_and_last_eruption_year(eruptions_and_types):
     eruptions_and_types['first_eruption_year'] = eruptions_and_types.groupby('volcano_name')['year'].transform('min')
     eruptions_and_types['last_eruption_year'] = eruptions_and_types.groupby('volcano_name')['year'].transform('max')
 
-    # Group by volcano_name, volcano_type and count eruptions
-    top_10_eruptions_count = (
-        eruptions_and_types.groupby(['volcano_name', 'volcano_type', 'first_eruption_year', 'last_eruption_year'])
-        .size()
-        .reset_index(name='eruption_count')
-        .sort_values(by='eruption_count', ascending=False)
-        .head(10)
-        .reset_index(drop=True)
-    )
-
-    return top_10_eruptions_count
+    return eruptions_and_types

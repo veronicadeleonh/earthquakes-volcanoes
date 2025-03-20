@@ -79,17 +79,27 @@ if not plate_boundaries.empty:
 # Only add earthquake markers if filtered data exists
 if len(filtered_earthquakes) > 0:
     colormap = cm.linear.YlOrRd_09.scale(filtered_earthquakes['mag'].min(), filtered_earthquakes['mag'].max())
-
+    
     for _, row in filtered_earthquakes.iterrows():
-        color = colormap(row['mag'])  # Get color based on magnitude
+
+        popup_text = f"""
+        <b>Earthquake:</b> {row['place']}<br>
+        <b>Tectonic Plate:</b> {row['tectonic_plate']}<br>
+        <b>Magnitude (Mw):</b> {row['mag']}<br>
+        <b>Depth (km):</b> {row['depth']}<br>
+        """
+        popup = folium.Popup(popup_text, max_width=300)
+        color = colormap(row['mag'])
+
         folium.CircleMarker(
             location=[row['latitude'], row['longitude']],
-            radius=2,
+            radius=1,
             color=color,
             fill=True,
             fill_color=color,
+            popup=popup,
             fill_opacity=0.8,
-            popup=f"Magnitude: {row['mag']} Mw. Date: {row["datetime"]}"
+            tooltip=f"{row['place']}"
         ).add_to(m)
 
     # Add color legend

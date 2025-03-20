@@ -76,7 +76,7 @@ for _, row in latest_eruptions.iterrows():
 st.subheader("Volcano Locations and their frequency")
 st_folium(volcano_map, width="100%", height=500)
 
-st.subheader("Top 10 highest eruption count")
+st.subheader("Top 10 highest ruption count")
 st.dataframe(top_10_eruptions_count
              .rename(columns = {
                  "volcano_name": "Volcano", 

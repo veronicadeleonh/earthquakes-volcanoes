@@ -131,9 +131,14 @@ highest_depth_index = top_10_plates_by_magnitude["depth"].idxmax()
 highest_depth_plate = top_10_plates_by_magnitude.iloc[highest_depth_index]["tectonic_plate"]
 highest_depth_km = top_10_plates_by_magnitude["depth"].max()
 
-st.dataframe(top_10_plates_by_magnitude
-             .rename(columns={"place": "Place", "tectonic_plate": "Tectonic Plate", "mag":"Magnitude (Mw)", "depth": "Depth (km)"})
-             .style.background_gradient(cmap='plasma'))
+st.write(
+    top_10_plates_by_magnitude
+        .rename(columns={"place": "Place", "tectonic_plate": "Tectonic Plate", "mag": "Magnitude (Mw)", "depth": "Depth (km)"})
+        .style
+        .background_gradient(cmap='plasma')
+        .format("{:.2f}", subset=['Magnitude (Mw)'])
+        .format("{:.4f}", subset=['Depth (km)'])
+)
 
 st.markdown(
 f"""
@@ -228,10 +233,12 @@ for _, row in tsunami_data.iterrows():
 # Display the map in Streamlit
 st_folium(tsunami_map, width="100%", height=300)
 
-st.dataframe(tsunami_data[['place', 'tectonic_plate', 'mag', 'depth']]
+st.write(tsunami_data[['place', 'tectonic_plate', 'mag', 'depth']]
              .rename(columns={"place": "Place", "tectonic_plate": "Tectonic Plate", "mag":"Magnitude (Mw)", "depth": "Depth (km)"})
              .reset_index(drop=True)
              .style.background_gradient(cmap='plasma')
+             .format("{:.2f}", subset=['Magnitude (Mw)'])
+             .format("{:.4f}", subset=['Depth (km)'])
              .hide()
              )
 

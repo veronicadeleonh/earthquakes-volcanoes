@@ -211,7 +211,7 @@ def load_eruption_data():
         else:
             volcanoes_of_earth.at[index, 'elevation'] = -99999
 
-    eruptions_and_types = pd.merge(eruptions, volcanoes_of_earth, on='volcano_name', how='left')
+    eruptions_and_types = pd.merge(eruptions, volcanoes_of_earth, on='volcano_name', how='inner')
 
     return eruptions_and_types
 

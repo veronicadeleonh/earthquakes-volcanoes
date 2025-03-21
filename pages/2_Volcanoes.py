@@ -3,6 +3,7 @@ import pandas as pd
 import folium
 from streamlit_folium import st_folium
 import plotly.express as px
+from datetime import datetime
 
 from utils.utils import load_eruption_data, load_first_and_last_eruption_year
 
@@ -114,11 +115,10 @@ eruptions_by_type = (
     .size()
     .reset_index(name='eruption_count')
     .sort_values(by='eruption_count', ascending=False)
-    .head(10)
 )
 
 # Step 2: Plot the bar chart
-st.bar_chart(eruptions_by_type.set_index('volcano_type'))
+st.bar_chart(eruptions_by_type.set_index('volcano_type'), horizontal=True)
 
 
 # Add filters
@@ -127,7 +127,7 @@ selected_types = st.multiselect('Select Volcano Types', volcano_types, default=v
 
 year_min = int(eruptions_and_types['year'].min())
 year_max = int(eruptions_and_types['year'].max())
-selected_years = st.slider('Select Year Range', year_min, year_max, (year_min, year_max))
+selected_years = st.slider('Select Year Range', year_min, year_max, (1900, year_max))
 
 # Filter the data
 filtered_data = eruptions_and_types[
@@ -153,6 +153,36 @@ fig.update_layout(
     yaxis_title='Volcanic Explosivity Index (VEI)',
     legend_title='Volcano Type',
     hovermode='closest'
+)
+
+# Display the plot in Streamlit
+st.plotly_chart(fig, use_container_width=True)
+
+############ Eruptions cpunt in the last 200 years
+
+# Step 1: Calculate the last 200 years
+current_year = datetime.now().year
+start_year = current_year - 200
+
+# Step 2: Filter the data for the last 100 years
+filtered_data = eruptions_and_types[eruptions_and_types['year'] >= start_year]
+
+
+# Recalculate eruptions_by_year
+eruptions_by_year = (
+    filtered_data.groupby('year')
+    .size()
+    .reset_index(name='eruption_count')
+)
+
+# Update the plot
+fig = px.line(
+    eruptions_by_year,
+    x='year',
+    y='eruption_count',
+    title=f'Number of {selected_type} Volcanic Eruptions in the Last 200 Years',
+    labels={'year': 'Year', 'eruption_count': 'Number of Eruptions'},
+    markers=True
 )
 
 # Display the plot in Streamlit

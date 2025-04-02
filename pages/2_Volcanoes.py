@@ -40,11 +40,11 @@ volcanic_yearly_report = get_yearly_report()
 ################ Style functions
 def color_report_status(val):
     if val == "New":
-        return 'background-color: #f84528; color: #ffffff'
+        return 'background-color: #f84528; color: #fff'
     elif val == "Continuing":
-        return 'background-color: #fecb67; color: #ffffff'
-    # elif val == "Over":
-    #     return 'background-color: #d3d3d3; color: #0e1118'
+        return 'background-color: #fea546; color: #000'
+    elif val == "Over":
+        return 'background-color: #d3d3d3; color: #000'
     return ''
 
 
@@ -85,16 +85,6 @@ for _, row in volcanic_yearly_report.iterrows():
 st.subheader("Volcano Eruptions ")
 st_folium(yearly_eruptions_map, width="100%", height=500)
 
-
-################ Style functions
-def color_report_status(val):
-    if val == "New":
-        return 'background-color: #d32f2f; color: #0e1118'
-    elif val == "Continuing":
-        return 'background-color: #ff9800; color: #0e1118'
-    elif val == "Over":
-        return 'background-color: #d3d3d3; color: #0e1118'
-    return ''
 
 
 st.dataframe(volcanic_yearly_report[['volcano_name', 'eruption start date', 'eruption stop date', 'status', 'max vei', 'volcano_type']]

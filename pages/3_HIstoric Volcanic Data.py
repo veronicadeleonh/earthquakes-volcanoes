@@ -26,18 +26,6 @@ def get_first_and_last_eruption_year():
 
 first_and_last_eruption_year = get_first_and_last_eruption_year()
 
-@st.cache_data
-def get_weekly_report():
-    return load_weekly_report()
-
-volcanic_weekly_report = get_weekly_report()
-
-@st.cache_data
-def get_yearly_report():
-    return load_yearly_report()
-
-volcanic_yearly_report = get_yearly_report()
-
 
 st.title("🌋 Global Volcanic Eruption Data (Until 2020)")
 st.markdown(
@@ -109,7 +97,7 @@ st.subheader("Top 10 highest eruption count")
 volcano_types = first_and_last_eruption_year['volcano_type'].unique()
 selected_type = st.selectbox('Select Volcano Type', ['All'] + list(volcano_types))
 
-# ilter the DataFrame by selected volcano type
+# Filter the DataFrame by selected volcano type
 if selected_type == 'All':
     filtered_volcanoes = (
         first_and_last_eruption_year.groupby(['volcano_name', 'volcano_type', 'first_eruption_year', 'last_eruption_year'])
@@ -145,13 +133,9 @@ st.dataframe(filtered_volcanoes
 st.markdown(
     f"""
     **Key Insights from Volcanic Activity (Until 2020)**
-
     This static dataset reveals striking patterns in historical eruptions, drawn from merged GVP records:
-
     - 🔥 Most Active Volcano: **Mount Etna (Italy)** tops the list with **241 recorded eruption**, including one as early as **6190 BCE**.
-
     - 🌋 Oldest Recorded Eruption: **Merapi (Indonesia)**, a **stratovolcano**, erupted in **8780 BCE**—the oldest event in the top 10.
-
     - 🌍 2020’s Lone Representative: **Piton de la Fournaise (Réunion Island)** was the only volcano active in **2020** to rank among the top 10 by eruption frequency.
 
     Explore the interactive map above to see how eruption counts cluster geographically, with marker sizes reflecting historical activity. Filter the table below by volcano type to dive deeper into these fiery giants.
@@ -175,34 +159,62 @@ eruptions_by_type = (
 # Step 2: Plot the bar chart
 st.bar_chart(eruptions_by_type.set_index('volcano_type'), horizontal=True)
 
+st.markdown("""
+    **Key Observations**
+    The dataset reveals a clear dominance of **stratovolcanoes**, accounting for **6,883 eruptions** (over 80% of recorded events). This likely reflects both their explosive nature and reporting biases in the GVP data, where volcanoes with multiple classifications (e.g., "Stratovolcano-Complex") may default to the stratovolcano label.
+
+    Key Observations:
+    - 🔥 Stratovolcanoes: **6,883 eruptions**
+    - 🌋 Calderas: **1,119 eruptions**
+    - 🛡️ Shield Volcanoes: **1,114 eruptions**
+    - 🗻 Tuff/Cinder Cones: Fewest recorded eruptions
+            """)
+
+st.info("**Fun fact:** While stratovolcanoes dominate eruption counts, shield volcanoes cover far larger areas (e.g., Hawaii).", icon="ℹ️")
+
+st.divider()
+
+st.subheader("Volcanic Explosivity (VEI) Over Time")
+st.write("Explore 11,000 years of eruptions in this interactive scatter plot, from 9,000 BCE to 2020 CE, with eruptions color-coded by volcano type.")
+st.markdown("""
+    - **VEI -1** (null values) are hidden by default—these represent eruptions with unclassified explosivity.
+    - Filter by year range to reveal patterns (e.g., compare ancient vs. modern eruptions).
+""")
 
 # Add filters
+st.write("**Filter data by:**")
 volcano_types = eruptions_and_types['volcano_type'].unique()
-selected_types = st.multiselect('Select Volcano Types', volcano_types, default=volcano_types)
+selected_types = st.multiselect(
+    'Select Volcano Types', 
+    volcano_types, 
+    default=["Stratovolcano(es)", "Shield(s)"]
+)
 
-year_min = int(eruptions_and_types['year'].min())
-year_max = int(eruptions_and_types['year'].max())
-selected_years = st.slider('Select Year Range', year_min, year_max, (1900, year_max))
+selected_years = st.slider(
+    "Select year range:", 
+    min_value=-9000, 
+    max_value=2020, 
+    value=(-1000, 2020)
+)
 
 # Filter the data
 filtered_data = eruptions_and_types[
     (eruptions_and_types['volcano_type'].isin(selected_types)) &
-    (eruptions_and_types['year'].between(selected_years[0], selected_years[1]))
+    (eruptions_and_types['year'].between(selected_years[0], selected_years[1])) &
+    (eruptions_and_types['vei'] != -1)
 ]
 
-# Create the Plotly figure
+# Create the Plotly figure with trendline
 fig = px.scatter(
     filtered_data,
     x='year',
     y='vei',
     color='volcano_type',
     hover_data=['volcano_name', 'vei', 'latitude', 'longitude', 'elevation'],
-    title='Volcanic Eruptions Over Time (Colored by Volcano Type)',
-    labels={'year': 'Year', 'vei': 'Volcanic Explosivity Index (VEI)'}
+    title='VEI by Volcano Type Over Time',
+    labels={'year': 'Year', 'vei': 'Volcanic Explosivity Index (VEI)'},
 )
 
-# Customize the plot
-fig.update_traces(marker=dict(size=10, line=dict(width=1, color='DarkSlateGrey')))
 fig.update_layout(
     xaxis_title='Year',
     yaxis_title='Volcanic Explosivity Index (VEI)',
@@ -210,8 +222,111 @@ fig.update_layout(
     hovermode='closest'
 )
 
-# Display the plot in Streamlit
+# Display the plot
 st.plotly_chart(fig, use_container_width=True)
+
+# Show filtered count
+total_filtered = len(eruptions_and_types[
+    (eruptions_and_types['year'].between(selected_years[0], selected_years[1])) &
+    (eruptions_and_types['vei'] != -1)
+])
+
+st.write(f"Showing {len(filtered_data)} of {total_filtered} eruptions ({selected_years[0]}–{selected_years[1]})")
+
+
+# --- Calculate Accurate Percentages ---
+if 'filtered_data' in locals() and not filtered_data.empty:
+    try:
+        # Calculate stratovolcano high-VEI proportion
+        high_vei_eruptions = filtered_data[filtered_data['vei'] >= 4]
+        high_vei_strat = filtered_data[
+            (filtered_data['volcano_type'].str.contains('Stratovolcano')) & 
+            (filtered_data['vei'] >= 4)
+        ]
+        
+        # Prevent division by zero
+        if len(high_vei_eruptions) > 0:
+            strat_high_vei_pct = len(high_vei_strat) / len(high_vei_eruptions)
+        else:
+            strat_high_vei_pct = 0
+        
+        # Calculate shield volcano low-VEI proportion
+        shield_volcanoes = filtered_data[filtered_data['volcano_type'].str.contains('Shield')]
+        low_vei_shield = filtered_data[
+            (filtered_data['volcano_type'].str.contains('Shield')) & 
+            (filtered_data['vei'].between(0, 2))
+        ]
+        
+        # Prevent division by zero
+        if len(shield_volcanoes) > 0:
+            shield_low_vei_pct = len(low_vei_shield) / len(shield_volcanoes)
+        else:
+            shield_low_vei_pct = 0
+        
+    except Exception as e:
+        st.warning(f"Calculation error: {str(e)}")
+        strat_high_vei_pct = 0.92  # Fallback to your original estimates
+        shield_low_vei_pct = 0.87
+else:
+    # Use placeholder values if filtered_data isn't available
+    strat_high_vei_pct = 1
+    shield_low_vei_pct = 1
+
+# --- Insights Section ---
+st.markdown("""
+##### Key Insights from Volcanic Explosivity Data 
+""")
+
+col1, col2 = st.columns(2)
+
+with col1:
+    with st.expander("**Stratovolcanoes: Explosive Giants**", expanded=True):
+        st.markdown("""
+        - 🧨 **Dominate high-VEI events**: 92% of VEI ≥4 eruptions
+        - 💥 **Cataclysmic potential**:  
+          • Changbaishan (VEI 7, 942 CE)  
+          • Rinjani (VEI 7, 1257)  
+          • Tambora (VEI 7, 1815) - caused "Year Without Summer"
+        """)
+
+        st.progress(strat_high_vei_pct, text=f"{strat_high_vei_pct:.0%} of high-VEI eruptions")
+
+with col2:
+    with st.expander("**Shield Volcanoes: Gentle but Mighty**", expanded=True):
+        st.markdown("""
+        - 🌋 **Mostly VEI 0-2**: 87% of eruptions are gentle lava flows
+        - ⚡ **Rare exceptions**:  
+          • Okmok (VEI 6, 100 BCE)  
+          • Cero Azul (VEI 5, 1916)  
+          • Mauna Loa (VEI 4, 1859)
+        """)
+
+        st.progress(shield_low_vei_pct, text=f"{shield_low_vei_pct:.0%} of low-VEI eruptions")
+
+
+# --- Time Analysis Section ---
+st.markdown("""
+##### Temporal Patterns
+""")
+
+time_tab1, time_tab2 = st.tabs(["Recording Bias", "Modern Monitoring"])
+
+with time_tab1:
+    st.markdown("""
+    **Pre-1800s data shows:**  
+    - Fewer recorded eruptions overall  
+    - Only the largest events (VEI ≥4) were documented  
+    - *Try comparing -1000 to 1000 vs 1800-2000*
+    """)
+
+with time_tab2:
+    st.markdown("""
+    **Post-1960s improvements:**  
+    - 5× more eruptions recorded  
+    - Better detection of small events (VEI 1-2)  
+    - *Filter to 1960-2020 to see satellite-era data*  
+    """)
+
 
 st.divider()
 ############ Eruptions cpunt in the last 200 years

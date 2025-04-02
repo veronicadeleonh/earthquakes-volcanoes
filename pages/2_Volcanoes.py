@@ -1,11 +1,8 @@
 import streamlit as st
-import pandas as pd
 import folium
 from streamlit_folium import st_folium
-import plotly.express as px
-from datetime import datetime
 
-from utils.utils import load_eruption_data, load_first_and_last_eruption_year
+from utils.utils import load_eruption_data, load_first_and_last_eruption_year, load_weekly_report, load_yearly_report
 
 st.set_page_config(
     layout="wide",
@@ -14,7 +11,7 @@ st.set_page_config(
     page_icon="🌋",
 )
 
-
+################ Loading data
 @st.cache_data
 def get_eruptions_and_types():
     return load_eruption_data()
@@ -27,163 +24,139 @@ def get_first_and_last_eruption_year():
 
 first_and_last_eruption_year = get_first_and_last_eruption_year()
 
-st.title("🌋 Volcanoes")
+@st.cache_data
+def get_weekly_report():
+    return load_weekly_report()
 
-############ Volcano locations map
+volcanic_weekly_report = get_weekly_report()
 
-eruption_counts = eruptions_and_types.groupby('volcano_name').size().reset_index(name='eruption_count')
-latest_eruptions = eruptions_and_types.sort_values('year', ascending=False).drop_duplicates('volcano_name')
-latest_eruptions = latest_eruptions.merge(eruption_counts, on='volcano_name')
+@st.cache_data
+def get_yearly_report():
+    return load_yearly_report()
 
-volcano_map = folium.Map(location=[20, 0], zoom_start=2, min_zoom=2, tiles="Esri.WorldImagery")
+volcanic_yearly_report = get_yearly_report()
+
+
+################ Style functions
+def color_report_status(val):
+    if val == "New":
+        return 'background-color: #f84528; color: #ffffff'
+    elif val == "Continuing":
+        return 'background-color: #fecb67; color: #ffffff'
+    # elif val == "Over":
+    #     return 'background-color: #d3d3d3; color: #0e1118'
+    return ''
+
+
+################ Yearly Report
+st.title("🌋 Eruptions Report in 2025")
+st.write("""
+         The eruption occurrencies is scraped from the Global Volcanism Program's Weekly Report. 
+         - Kaggle Dataset 1
+         - Kaggle Dataset 2
+""")
+
+yearly_eruptions_map = folium.Map(location=[10, -160], zoom_start=2, min_zoom=2, tiles="Esri.WorldImagery", max_bounds=True)
 
 # Add markers for each volcano
-for _, row in latest_eruptions.iterrows():
+for _, row in volcanic_yearly_report.iterrows():
     popup_text = f"""
-    <b>Volcano:</b> {row['volcano_name']}<br>
-    <b>Latest Eruption:</b> {row['year']}<br>
-    <b>VEI:</b> {row['vei']}<br>
-    <b>Type:</b> {row['volcano_type']}<br>
-    <b>Epoch:</b> {row['epoch_period']}
+    <b>{row['volcano_name']}</b><br>
+    Status: {row['status']}<br>
+    Type: {row['volcano_type']}<br>
+    Elevation: {row['elevation']} m
     """
     popup = folium.Popup(popup_text, max_width=300)
 
-    marker_size = row['eruption_count'] * 0.1
+    # marker_size = row['max vei'] * 0.1
 
     folium.CircleMarker(
         location=[row['latitude'], row['longitude']],
-        radius=marker_size,
+        radius=1,
         color="yellow",
         fill=True,
         fill_color="yellow",
         fill_opacity=0.8,
         popup=popup,
-        tooltip=f"{row['volcano_name']} ({row['eruption_count']} eruptions)",
-    ).add_to(volcano_map)
+        tooltip=f"{row['volcano_name']}",
+    ).add_to(yearly_eruptions_map)
 
 # Display the map in Streamlit
-st.subheader("Volcano Locations and their frequency")
-st_folium(volcano_map, width="100%", height=500)
+st.subheader("Volcano Eruptions ")
+st_folium(yearly_eruptions_map, width="100%", height=500)
 
-############ Top 10 higehst eruption count
 
-st.subheader("Top 10 highest eruption count")
+################ Style functions
+def color_report_status(val):
+    if val == "New":
+        return 'background-color: #d32f2f; color: #0e1118'
+    elif val == "Continuing":
+        return 'background-color: #ff9800; color: #0e1118'
+    elif val == "Over":
+        return 'background-color: #d3d3d3; color: #0e1118'
+    return ''
 
-# Add a filter
-volcano_types = first_and_last_eruption_year['volcano_type'].unique()
-selected_type = st.selectbox('Select Volcano Type', ['All'] + list(volcano_types))
 
-# ilter the DataFrame by selected volcano type
-if selected_type == 'All':
-    filtered_volcanoes = (
-        first_and_last_eruption_year.groupby(['volcano_name', 'volcano_type', 'first_eruption_year', 'last_eruption_year'])
-        .size()
-        .reset_index(name='eruption_count')
-        .sort_values(by='eruption_count', ascending=False)
-        .head(10)
-        .reset_index(drop=True)
-    )
-else:
-    filtered_volcanoes = (
-        first_and_last_eruption_year[first_and_last_eruption_year['volcano_type'] == selected_type]
-        .groupby(['volcano_name', 'volcano_type', 'elevation', 'first_eruption_year', 'last_eruption_year'])
-        .size()
-        .reset_index(name='eruption_count')
-        .sort_values(by='eruption_count', ascending=False)
-        .head(10)
-    )
-
-# Display the filtered DataFrame
-st.write(f"Most Active {selected_type} Volcanoes:")
-
-st.dataframe(filtered_volcanoes
+st.dataframe(volcanic_yearly_report[['volcano_name', 'eruption start date', 'eruption stop date', 'status', 'max vei', 'volcano_type']]
              .rename(columns = {
-                 "volcano_name": "Volcano", 
+                 "volcano_name": "Volcano",
+                 "country": "Country",
+                 "eruption start date": "Start date",
+                 "eruption stop date": "Stop date",
+                 "status": "Report Status",
+                 "max vei": "Max VEI",
+                 "volcano_type": "Volcano Type"})
+                 .style
+                 .applymap(color_report_status, subset=['Report Status']))
+
+
+
+
+################ Weekly Report
+st.title("🌋 Weekly report")
+st.write("""
+         The eruption occurrencies is scraped from the Global Volcanism Program's Weekly Report. 
+         - Kaggle Dataset 1
+         - Kaggle Dataset 2
+""")
+
+weekly_eruptions_map = folium.Map(location=[10, -160], zoom_start=2, min_zoom=2, tiles="Esri.WorldImagery", max_bounds=True)
+
+# Add markers for each volcano
+for _, row in volcanic_weekly_report.iterrows():
+    popup_text = f"""
+    <b>{row['volcano_name']}</b><br>
+    Status: {row['report_status']}<br>
+    Type: {row['volcano_type']}<br>
+    Elevation: {row['elevation']} m
+    """
+    popup = folium.Popup(popup_text, max_width=300)
+
+    folium.CircleMarker(
+        location=[row['latitude'], row['longitude']],
+        radius=2,
+        color="yellow",
+        fill=True,
+        fill_color="yellow",
+        fill_opacity=0.8,
+        popup=popup,
+        tooltip=f"{row['volcano_name']}",
+    ).add_to(weekly_eruptions_map)
+
+# Display the map in Streamlit
+st.subheader("Weekly Volcano Eruptions Report")
+st_folium(weekly_eruptions_map, width="100%", height=500)
+
+
+st.dataframe(volcanic_weekly_report[["volcano_name", "start_date", "report_status", "volcano_type", "elevation"]]
+             .rename(columns = {
+                 "volcano_name": "Volcano",
+                 "start_date": "Start date",
+                 "report_status": "Report Status",
                  "volcano_type": "Volcano Type", 
-                 "elevation": "Elevation (m)", 
-                 "first_eruption_year": "First eruption year", 
-                 "last_eruption_year":"Last eruption year", 
-                 "eruption_count": "Eruption count"})
-             .style.background_gradient(cmap='YlOrRd', subset=['Eruption count']))
+                 "elevation": "Elevation (m)"}
+             )
+             .style
+             .applymap(color_report_status, subset=['Report Status']))
 
 
-############ Eruptions by Volcano type
-
-st.subheader("Eruption count by volcano type")
-eruptions_by_type = (
-    eruptions_and_types.groupby('volcano_type')
-    .size()
-    .reset_index(name='eruption_count')
-    .sort_values(by='eruption_count', ascending=False)
-)
-
-# Step 2: Plot the bar chart
-st.bar_chart(eruptions_by_type.set_index('volcano_type'), horizontal=True)
-
-
-# Add filters
-volcano_types = eruptions_and_types['volcano_type'].unique()
-selected_types = st.multiselect('Select Volcano Types', volcano_types, default=volcano_types)
-
-year_min = int(eruptions_and_types['year'].min())
-year_max = int(eruptions_and_types['year'].max())
-selected_years = st.slider('Select Year Range', year_min, year_max, (1900, year_max))
-
-# Filter the data
-filtered_data = eruptions_and_types[
-    (eruptions_and_types['volcano_type'].isin(selected_types)) &
-    (eruptions_and_types['year'].between(selected_years[0], selected_years[1]))
-]
-
-# Create the Plotly figure
-fig = px.scatter(
-    filtered_data,
-    x='year',
-    y='vei',
-    color='volcano_type',
-    hover_data=['volcano_name', 'vei', 'latitude', 'longitude', 'elevation'],
-    title='Volcanic Eruptions Over Time (Colored by Volcano Type)',
-    labels={'year': 'Year', 'vei': 'Volcanic Explosivity Index (VEI)'}
-)
-
-# Customize the plot
-fig.update_traces(marker=dict(size=10, line=dict(width=1, color='DarkSlateGrey')))
-fig.update_layout(
-    xaxis_title='Year',
-    yaxis_title='Volcanic Explosivity Index (VEI)',
-    legend_title='Volcano Type',
-    hovermode='closest'
-)
-
-# Display the plot in Streamlit
-st.plotly_chart(fig, use_container_width=True)
-
-############ Eruptions cpunt in the last 200 years
-
-# Step 1: Calculate the last 200 years
-current_year = datetime.now().year
-start_year = current_year - 200
-
-# Step 2: Filter the data for the last 100 years
-filtered_data = eruptions_and_types[eruptions_and_types['year'] >= start_year]
-
-
-# Recalculate eruptions_by_year
-eruptions_by_year = (
-    filtered_data.groupby('year')
-    .size()
-    .reset_index(name='eruption_count')
-)
-
-# Update the plot
-fig = px.line(
-    eruptions_by_year,
-    x='year',
-    y='eruption_count',
-    title=f'Number of {selected_type} Volcanic Eruptions in the Last 200 Years',
-    labels={'year': 'Year', 'eruption_count': 'Number of Eruptions'},
-    markers=True
-)
-
-# Display the plot in Streamlit
-st.plotly_chart(fig, use_container_width=True)

@@ -6,6 +6,9 @@ import pandas as pd
 import streamlit as st
 import kagglehub
 import os
+from bs4 import BeautifulSoup
+import re
+import requests
 
 
 @st.cache_data
@@ -130,70 +133,43 @@ def get_tectonic_plate_data(earthquakes_df):
 
 
 @st.cache_data
-def load_eruption_data():
-    # Loading datasets
-    eruptions_path = kagglehub.dataset_download("jessemostipak/volcano-eruptions")
-    volcanoes_path = kagglehub.dataset_download("deepcontractor/the-volcanoes-of-earth")
+def clean_volcanos_of_earth():
+
+    path = kagglehub.dataset_download("deepcontractor/the-volcanoes-of-earth")
+    file_path = os.path.join(path, "The_Volcanoes_Of_Earth.csv")
+    volcanoes_of_earth = pd.read_csv(file_path)
     
-    eruptions_file = os.path.join(eruptions_path, "eruptions.csv")
-    volcanoes_file = os.path.join(volcanoes_path, "The_Volcanoes_Of_Earth.csv")
-
-    eruptions = pd.read_csv(eruptions_file)
-    volcanoes_of_earth = pd.read_csv(volcanoes_file)
-
-    # Cleaning eruptions dataset
-    eruptions = eruptions[['volcano_name', 'vei', 'start_year',	'latitude', 'longitude']]
-    eruptions.dropna(subset=['start_year'], inplace=True)
-    eruptions['vei'] = eruptions['vei'].fillna(-1)
-    eruptions["start_year"] = pd.to_numeric(eruptions['start_year'], downcast='integer', errors='coerce')
-    eruptions.rename(columns={"start_year": "year"}, errors="raise", inplace=True)
-
-    # Cleaning volcano names
-    volcano_names = {
-    (-20.852, -175.550): 'Hunga Tonga-Hunga Ha\'apai',
-    (-18.325, -174.365): 'Late Island',
-    (46.470, 151.280): 'Chirinkotan',
-    (45.022, 147.019): 'Ekarma',
-    (-21.338, -175.650): 'Kao',
-    (21.830, 121.180): 'Green Island',
-    (20.330, 121.750): 'Babuyan Claro',
-    (24.132, 121.926): 'Qixing Mountain'
-    }
-
-    # Update the volcano names
-    eruptions['volcano_name'] = eruptions.apply(
-        lambda row: volcano_names.get((row['latitude'], row['longitude']), row['volcano_name']),
-        axis=1
-    )
-
-    # Cleaning volcanos on earth
     volcanoes_of_earth.columns = [column.lower() for column in volcanoes_of_earth.columns]
     volcanoes_of_earth = volcanoes_of_earth[['volcano_name', 'volcano_type', 'epoch_period', 'summit_and_elevatiuon']]
 
     volcanoes_of_earth['volcano_type'] = volcanoes_of_earth['volcano_type'].replace({
-        "Stratovolcano":"Stratovolcano(es)",
-        "Stratovolcano?": "Stratovolcano(es)",
-        "Pyroclastic cone": "Pyroclastic cone(s)",
-        "Shield": "Shield(s)",
-        "Shield?": "Shield(s)",
-        "Lava dome": "Lava dome(s)",
-        "Caldera": "Caldera(s)",
-        "Caldera(?)": "Caldera(s)",
-        "Tuff cone": "Tuff cone(s)",
-        "Complex": "Complex(es)",
-        "Lava cone": "Lava cone(s)",
-        "Lava cone(es)": "Lava cone(s)",
-        "Cone": "Cone(s)",
-        "Explosion crater": "Explosion crater(s)",
-        "Explosion crater(?)": "Explosion crater(s)",
-        "Lava dome(s) ?": "Lava dome(s)",
-        "Fissure vent(s) ?": "Fissure vent(s)"
-    })
+    "Stratovolcano":"Stratovolcano(es)",
+    "Stratovolcano?": "Stratovolcano(es)",
+    "Pyroclastic cone": "Pyroclastic cone(s)",
+    "Shield": "Shield(s)",
+    "Shield?": "Shield(s)",
+    "Lava dome": "Lava dome(s)",
+    "Caldera": "Caldera(s)",
+    "Caldera(?)": "Caldera(s)",
+    "Tuff cone": "Tuff cone(s)",
+    "Complex": "Complex(es)",
+    "Lava cone": "Lava cone(s)",
+    "Lava cone(es)": "Lava cone(s)",
+    "Cone": "Cone(s)",
+    "Explosion crater": "Explosion crater(s)",
+    "Explosion crater(?)": "Explosion crater(s)",
+    "Lava dome(s) ?": "Lava dome(s)",
+    "Fissure vent(s) ?": "Fissure vent(s)"
+
+})
 
     volcanoes_of_earth['epoch_period'] = volcanoes_of_earth['epoch_period'].replace({
         "holocene":"Holoceno",
         "pleistocene": "Pleistocene"
     })
+
+
+    volcanoes_of_earth['volcano_type'].value_counts()
 
     # Renaming the column to "elevation"
     volcanoes_of_earth.rename(columns={'summit_and_elevatiuon':'elevation'}, inplace=True)
@@ -211,6 +187,53 @@ def load_eruption_data():
         else:
             volcanoes_of_earth.at[index, 'elevation'] = -99999
 
+    
+    return volcanoes_of_earth
+
+
+@st.cache_data
+def clean_eruptions():
+    path = kagglehub.dataset_download("jessemostipak/volcano-eruptions")
+
+    eruptions_path = os.path.join(path, "eruptions.csv")
+    eruptions = pd.read_csv(eruptions_path)
+
+    eruptions = eruptions[['volcano_name', 'vei', 'start_year', 'end_year', 'latitude', 'longitude']]
+    eruptions.dropna(subset=['start_year'], inplace=True)
+    eruptions['vei'] = eruptions['vei'].fillna(-1)
+
+    eruptions["start_year"] = pd.to_numeric(eruptions['start_year'], downcast='integer', errors='coerce')
+    eruptions.rename(columns={"start_year": "year"}, errors="raise", inplace=True)
+
+    eruptions[(eruptions["latitude"] == -21.338) & (eruptions["longitude"] == -175.650)]
+
+    
+    # Manually adding volanic names based on latitude and logitude to unnamed ones
+    volcano_names = {
+        (-20.852, -175.550): 'Hunga Tonga-Hunga Ha\'apai',
+        (-18.325, -174.365): 'Late Island',
+        (46.470, 151.280): 'Chirinkotan',
+        (45.022, 147.019): 'Ekarma',
+        (-21.338, -175.650): 'Kao',
+        (21.830, 121.180): 'Green Island',
+        (20.330, 121.750): 'Babuyan Claro',
+        (24.132, 121.926): 'Qixing Mountain'
+    }
+
+    # Update the volcano names
+    eruptions['volcano_name'] = eruptions.apply(
+        lambda row: volcano_names.get((row['latitude'], row['longitude']), row['volcano_name']),
+        axis=1
+    )
+    
+    return eruptions
+
+
+@st.cache_data
+def load_eruption_data():
+    
+    eruptions = clean_eruptions()
+    volcanoes_of_earth = clean_volcanos_of_earth()
     eruptions_and_types = pd.merge(eruptions, volcanoes_of_earth, on='volcano_name', how='inner')
 
     return eruptions_and_types
@@ -222,3 +245,136 @@ def load_first_and_last_eruption_year(eruptions_and_types):
     eruptions_and_types['last_eruption_year'] = eruptions_and_types.groupby('volcano_name')['year'].transform('max')
 
     return eruptions_and_types
+
+
+@st.cache_data
+def scrap_volcanic_weekly_report():
+
+    url = "https://volcano.si.edu/reports_weekly.cfm?vtab=feeds"
+    response = requests.get(url)
+
+    soup = BeautifulSoup(response.content)
+    table = soup.find('table')
+
+    volcano_data = []
+    headers = [th.get_text(strip=True) for th in table.find_all('th')][1:]
+
+    for row in table.find_all('tr')[2:]:  # Skip header row
+        cols = row.find_all(['td', 'th'])
+
+        if len(cols) < len(headers):
+            print("Skipping row: not enough columns")
+            continue
+
+        try:
+            volcano_link = row.find('a', href=re.compile(r'#vn_'))
+            
+            if not volcano_link:
+                print("No volcano link found in this row")
+                continue
+            
+            volcano_id = volcano_link['href'].split('#vn_')[1]
+            volcano_name = volcano_link.get_text(strip=True)
+            start_date = cols[3].get_text(strip=True)
+            
+            report_status = row.find("a", attrs={"data-tooltip": True})
+            report_text = report_status.get_text(strip=True) if report_status else None
+
+            row_data = {
+                'volcano_id': volcano_id,
+                'volcano_name': volcano_name,
+                'start_date': start_date,
+                'report_status': report_text
+            }
+            
+            volcano_data.append(row_data)
+        
+        except Exception as e:
+            print(f"Error processing row: {e}")
+
+    volcanic_weekly_report = pd.DataFrame(volcano_data)
+
+    return volcanic_weekly_report
+
+
+@st.cache_data
+def load_weekly_report():
+    weekly_report = scrap_volcanic_weekly_report()
+    volcanoes_of_earth = clean_volcanos_of_earth()
+    eruptions = clean_eruptions()
+
+    weekly_report = pd.merge(weekly_report, volcanoes_of_earth, on='volcano_name', how='inner')
+    weekly_report = pd.merge(weekly_report, eruptions[['volcano_name', "latitude", "longitude"]], on='volcano_name', how='inner').drop_duplicates().reset_index(drop=True)
+
+    return weekly_report
+
+
+@st.cache_data
+def scrap_yearly_report():
+    url = "https://volcano.si.edu/faq/index.cfm?question=eruptionsbyyear&checkyear=2025"
+    response = requests.get(url)
+
+    soup = BeautifulSoup(response.text, 'html.parser')
+
+    # Find the table - you might need to adjust the selector based on the actual page structure
+    table = soup.find('table')
+
+    # Extract table data
+    data = []
+
+    # Get table headers
+    headers = []
+    for th in table.find_all('th'):
+        headers.append(th.text.strip())
+
+    # Get table rows
+    for row in table.find_all('tr')[1:]:  # Skip the header row
+        row_data = []
+        for td in row.find_all('td'):
+            row_data.append(td.text.strip())
+        
+        if row_data:  # Skip empty rows
+            data.append(row_data)
+
+    # Create a DataFrame
+    yearly_report = pd.DataFrame(data, columns=headers)
+    yearly_report.columns = [column.lower() for column in yearly_report.columns]
+    return yearly_report
+
+
+@st.cache_data
+def clean_yearly_report():
+    date_column = 'eruption stop date'
+    
+    df = scrap_yearly_report()
+    # Create the status column with default 'Over'
+    df['status'] = 'Over'
+    
+    # Update status based on the continuing text
+    mask = df[date_column].str.contains('\(continuing\)', regex=True, na=False)
+    df.loc[mask, 'status'] = 'Continuing'
+    
+    # Clean up the date strings
+    df[date_column] = df[date_column].str.replace(r'\s*\(continuing\)\s*', '', regex=True)
+    
+    # Count and print how many ongoing eruptions were found
+    ongoing_count = df['status'].value_counts().get('On going', 0)
+    print(f"Found {ongoing_count} ongoing eruptions")
+
+    df = df[['volcano', 'country', 'eruption start date', 'eruption stop date', 'status', 'max vei']]
+    df.rename(columns={'volcano':'volcano_name'}, inplace=True)
+    
+    return df
+
+
+@st.cache_data
+def load_yearly_report():
+    yearly_report = clean_yearly_report()
+    volcanoes_of_earth = clean_volcanos_of_earth()
+    eruptions = clean_eruptions()
+
+    yearly_report = pd.merge(yearly_report, volcanoes_of_earth, on='volcano_name', how='inner')
+    yearly_report = pd.merge(yearly_report, eruptions[['volcano_name', "latitude", "longitude"]], on='volcano_name', how='inner').drop_duplicates().reset_index(drop=True)
+
+    return yearly_report
+    

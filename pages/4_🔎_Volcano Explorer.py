@@ -241,3 +241,18 @@ if search_term:
         
 else:
     st.info("Please search for a volcano to see information")
+
+#------ Sidebar
+with st.sidebar:
+    st.markdown("## Data Attribution")
+    st.image("https://volcano.si.edu/includes/images/GVP_logo.png", width=200)
+    st.markdown("""
+    - Smithsonian GVP data through 2020
+    - Kaggle merged datasets
+    """)
+    
+    st.markdown("---")
+    st.markdown("""
+    *Note: This app combines authoritative sources 
+    with crowdsourced data for completeness.*
+    """)

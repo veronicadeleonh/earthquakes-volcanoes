@@ -53,7 +53,8 @@ if search_term:
     with col1:
         st.subheader("Volcano Data")
         st.metric("Elevation", f"{volcano['elevation']} m")
-        st.write(f"**Type:** {volcano['volcano_type']}")
+        st.write(f"**Primary Type:** {volcano['volcano_type']}")
+        st.image(volcano['volcano_image'])
     
     with col2:
         st.subheader("Location")

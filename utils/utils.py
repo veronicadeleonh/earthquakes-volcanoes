@@ -140,7 +140,7 @@ def clean_volcanos_of_earth():
     volcanoes_of_earth = pd.read_csv(file_path)
     
     volcanoes_of_earth.columns = [column.lower() for column in volcanoes_of_earth.columns]
-    volcanoes_of_earth = volcanoes_of_earth[['volcano_name', 'volcano_type', 'epoch_period', 'summit_and_elevatiuon']]
+    volcanoes_of_earth = volcanoes_of_earth[['volcano_name', 'volcano_image', 'volcano_type', 'epoch_period', 'summit_and_elevatiuon']]
 
     volcanoes_of_earth['volcano_type'] = volcanoes_of_earth['volcano_type'].replace({
     "Stratovolcano":"Stratovolcano(es)",
@@ -175,6 +175,7 @@ def clean_volcanos_of_earth():
     volcanoes_of_earth.rename(columns={'summit_and_elevatiuon':'elevation'}, inplace=True)
     # Replacing manually the value for Aak volcano
     volcanoes_of_earth.loc[1343, 'elevation'] = 2319
+    volcanoes_of_earth.loc[1343, 'volcano_image'] = 'https://volcano.si.edu/gallery/photos/GVP-12487.jpg'
     
     # Process the elevation column
     for index, value in volcanoes_of_earth['elevation'].items():

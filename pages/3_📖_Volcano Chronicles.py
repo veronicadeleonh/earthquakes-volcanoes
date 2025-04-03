@@ -306,7 +306,7 @@ with col2:
         st.progress(shield_low_vei_pct, text=f"{shield_low_vei_pct:.0%} of low-VEI eruptions in the dataset are from Shield volcanoes")
 
 
-st.divider()
+# st.divider()
 # ############ Eruptions cpunt in the last 200 years
 
 # # Step 1: Calculate the last 200 years

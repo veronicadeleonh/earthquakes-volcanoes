@@ -247,8 +247,10 @@ with st.sidebar:
     st.markdown("## Data Attribution")
     st.image("https://volcano.si.edu/includes/images/GVP_logo.png", width=200)
     st.markdown("""
-    - Smithsonian GVP data through 2020
+    - [Smithsonian GVP](https://volcano.si.edu/) data through 2020
     - Kaggle merged datasets
+        - [Volcano Eruptions](https://www.kaggle.com/jessemostipak/volcano-eruptions)  
+        - [The Volcanoes on Earth](https://www.kaggle.com/deepcontractor/the-volcanoes-of-earth)  
     """)
     
     st.markdown("---")

@@ -3,6 +3,9 @@ import folium
 from streamlit_folium import st_folium
 import plotly.express as px
 from datetime import datetime
+import pandas as pd
+import altair as alt
+import numpy as np
 
 from utils.utils import load_eruption_data, load_first_and_last_eruption_year, load_weekly_report, load_yearly_report
 
@@ -204,6 +207,14 @@ filtered_data = eruptions_and_types[
     (eruptions_and_types['vei'] != -1)
 ]
 
+
+# Show filtered count
+total_filtered = len(eruptions_and_types[
+    (eruptions_and_types['year'].between(selected_years[0], selected_years[1])) &
+    (eruptions_and_types['vei'] != -1)
+])
+
+
 # Create the Plotly figure with trendline
 fig = px.scatter(
     filtered_data,
@@ -225,13 +236,6 @@ fig.update_layout(
 # Display the plot
 st.plotly_chart(fig, use_container_width=True)
 
-# Show filtered count
-total_filtered = len(eruptions_and_types[
-    (eruptions_and_types['year'].between(selected_years[0], selected_years[1])) &
-    (eruptions_and_types['vei'] != -1)
-])
-
-st.write(f"Showing {len(filtered_data)} of {total_filtered} eruptions ({selected_years[0]}–{selected_years[1]})")
 
 
 # --- Calculate Accurate Percentages ---
@@ -272,6 +276,8 @@ else:
     strat_high_vei_pct = 1
     shield_low_vei_pct = 1
 
+st.markdown(f"Showing **{len(filtered_data)}** of {total_filtered} eruptions **({selected_years[0]}–{selected_years[1]})**")
+
 # --- Insights Section ---
 st.markdown("""
 ##### Key Insights from Volcanic Explosivity Data 
@@ -289,7 +295,7 @@ with col1:
           • Tambora (VEI 7, 1815) - caused "Year Without Summer"
         """)
 
-        st.progress(strat_high_vei_pct, text=f"{strat_high_vei_pct:.0%} of high-VEI eruptions")
+        st.progress(strat_high_vei_pct, text=f"{strat_high_vei_pct:.0%} of high-VEI eruptions in the dataset are from Stratovolcanoes")
 
 with col2:
     with st.expander("**Shield Volcanoes: Gentle but Mighty**", expanded=True):
@@ -301,60 +307,161 @@ with col2:
           • Mauna Loa (VEI 4, 1859)
         """)
 
-        st.progress(shield_low_vei_pct, text=f"{shield_low_vei_pct:.0%} of low-VEI eruptions")
-
-
-# --- Time Analysis Section ---
-st.markdown("""
-##### Temporal Patterns
-""")
-
-time_tab1, time_tab2 = st.tabs(["Recording Bias", "Modern Monitoring"])
-
-with time_tab1:
-    st.markdown("""
-    **Pre-1800s data shows:**  
-    - Fewer recorded eruptions overall  
-    - Only the largest events (VEI ≥4) were documented  
-    - *Try comparing -1000 to 1000 vs 1800-2000*
-    """)
-
-with time_tab2:
-    st.markdown("""
-    **Post-1960s improvements:**  
-    - 5× more eruptions recorded  
-    - Better detection of small events (VEI 1-2)  
-    - *Filter to 1960-2020 to see satellite-era data*  
-    """)
+        st.progress(shield_low_vei_pct, text=f"{shield_low_vei_pct:.0%} of low-VEI eruptions in the dataset are from Shield volcanoes")
 
 
 st.divider()
-############ Eruptions cpunt in the last 200 years
+# ############ Eruptions cpunt in the last 200 years
 
-# Step 1: Calculate the last 200 years
-current_year = datetime.now().year
-start_year = current_year - 200
+# # Step 1: Calculate the last 200 years
+# current_year = datetime.now().year
+# start_year = current_year - 200
 
-# Step 2: Filter the data for the last 100 years
-filtered_data = eruptions_and_types[eruptions_and_types['year'] >= start_year]
+# # Step 2: Filter the data for the last 100 years
+# filtered_data = eruptions_and_types[eruptions_and_types['year'] >= start_year]
 
 
-# Recalculate eruptions_by_year
-eruptions_by_year = (
-    filtered_data.groupby('year')
-    .size()
-    .reset_index(name='eruption_count')
+# # Recalculate eruptions_by_year
+# eruptions_by_year = (
+#     filtered_data.groupby('year')
+#     .size()
+#     .reset_index(name='eruption_count')
+# )
+
+# # Update the plot
+# fig = px.line(
+#     eruptions_by_year,
+#     x='year',
+#     y='eruption_count',
+#     title=f'Number of {selected_type} Volcanic Eruptions in the Last 200 Years',
+#     labels={'year': 'Year', 'eruption_count': 'Number of Eruptions'},
+#     markers=True
+# )
+
+# # Display the plot in Streamlit
+# st.plotly_chart(fig, use_container_width=True)
+
+# # --- Volcano explorer ---
+
+# App
+st.title("🌋 Advanced Volcano Explorer")
+
+# Search with autocomplete
+if "volcano_names" not in st.session_state:
+    st.session_state.volcano_names = eruptions_and_types["volcano_name"].tolist()
+
+search_term = st.selectbox(
+    "Search for a volcano:",
+    options=st.session_state.volcano_names,
+    index=None,
+    placeholder="Start typing...",
 )
 
-# Update the plot
-fig = px.line(
-    eruptions_by_year,
-    x='year',
-    y='eruption_count',
-    title=f'Number of {selected_type} Volcanic Eruptions in the Last 200 Years',
-    labels={'year': 'Year', 'eruption_count': 'Number of Eruptions'},
-    markers=True
-)
+# Display results
+if search_term:
+    # Filter to get all eruptions for the selected volcano
+    volcano_selected = eruptions_and_types[eruptions_and_types["volcano_name"] == search_term]
+    volcano = volcano_selected.iloc[0]  # Get the first row for volcano info
 
-# Display the plot in Streamlit
-st.plotly_chart(fig, use_container_width=True)
+    col1, col2 = st.columns([1, 2])
+    
+    with col1:
+        st.subheader("Volcano Data")
+        st.metric("Elevation", f"{volcano['elevation']} m")
+        st.write(f"**Type:** {volcano['volcano_type']}")
+    
+    with col2:
+        st.subheader("Location")
+        st.map(pd.DataFrame({
+            "lat": [volcano['latitude']],
+            "lon": [volcano['longitude']]
+        }), zoom=5)
+    
+    # Historical Eruption Visualization
+    st.subheader("Eruption History")
+
+    # Check if eruption data exists
+    if len(volcano_selected) >= 1 and 'year' in volcano_selected.columns:
+        # Check if we have valid year data
+        if not volcano_selected['year'].isna().all():
+            # Create a copy to avoid modifying the original dataframe
+            viz_data = volcano_selected.copy()
+            
+            # Convert years to integers if they're not already
+            if not pd.api.types.is_integer_dtype(viz_data['year']):
+                # If year is already datetime, extract year component
+                if pd.api.types.is_datetime64_dtype(viz_data['year']):
+                    viz_data['year'] = viz_data['year'].dt.year
+                else:
+                    # Try to convert to integer directly
+                    viz_data['year'] = pd.to_numeric(viz_data['year'], errors='coerce').astype('Int64')
+            
+            # Drop rows with NaN years after conversion
+            viz_data = viz_data.dropna(subset=['year'])
+            
+            if len(viz_data) > 0:
+                # Option 1: Timeline visualization with Altair
+                if 'vei' in viz_data.columns:
+                    # Fill missing VEI values with 0 or None
+                    viz_data['vei'] = viz_data['vei'].fillna(0)
+                    
+                    # Convert year to date format for better x-axis display
+                    viz_data['date_for_viz'] = pd.to_datetime(viz_data['year'], format='%Y')
+                    
+                    # Create tooltip fields based on available columns
+                    tooltip_fields = ['year', 'vei']
+                    if 'volcano_type' in viz_data.columns:
+                        tooltip_fields.append('volcano_type')
+                    
+                    # Create timeline chart
+                    timeline_chart = alt.Chart(viz_data).mark_circle(size=100).encode(
+                        x=alt.X('date_for_viz:T', title='Eruption Year', 
+                            axis=alt.Axis(format='%Y', labelAngle=-45)),
+                        y=alt.Y('vei:Q', title='Volcanic Explosivity Index (VEI)', 
+                            scale=alt.Scale(domain=[0, max(8, viz_data['vei'].max() + 1)]),
+                            axis=alt.Axis(tickMinStep=1)),
+                        size=alt.Size('vei:Q', legend=None),
+                        tooltip=tooltip_fields
+                    ).properties(
+                        height=300
+                    ).interactive()
+                    
+                    st.altair_chart(timeline_chart, use_container_width=True)
+                else:
+                    st.info("VEI (Volcanic Explosivity Index) data not available for timeline visualization.")
+                
+                # Option 2: Bar chart showing count of eruptions by decade or century
+                # Create decade bins - make sure year is numeric first
+                viz_data['decade'] = (viz_data['year'] // 10) * 10
+                
+                # Count eruptions by decade
+                eruptions_by_decade = viz_data.groupby('decade').size().reset_index(name='count')
+                
+                if not eruptions_by_decade.empty:
+                    # Create bar chart
+                    decade_chart = px.bar(
+                        eruptions_by_decade, 
+                        x='decade', 
+                        y='count',
+                        labels={'decade': 'Decade', 'count': 'Number of Eruptions'},
+                        title=f'Eruptions by Decade for {search_term}'
+                    )
+                    
+                    # Improve x-axis formatting for decades
+                    decade_chart.update_xaxes(type='category')
+                    
+                    st.plotly_chart(decade_chart, use_container_width=True)
+                else:
+                    st.info("Couldn't generate decade chart due to data issues.")
+            else:
+                st.info("No valid year data available for visualizations.")
+        else:
+            st.info("No eruption date information available for this volcano.")
+    else:
+        st.info("No historical eruption data available for this volcano.")
+    
+    st.subheader("Detailed Information") 
+    st.dataframe(volcano_selected)
+        
+else:
+    st.info("Please search for a volcano to see information")

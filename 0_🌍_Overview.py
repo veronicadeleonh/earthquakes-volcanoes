@@ -6,7 +6,7 @@ from streamlit_folium import st_folium
 import branca.colormap as cm
 
 
-from utils.utils import load_earthquake_data, load_plate_boundaries, get_tectonic_plate_data, load_weekly_report
+from utils.utils import load_earthquake_data, load_plate_boundaries, get_tectonic_plate_data, load_weekly_report, load_yearly_report
 
 # Page Config
 st.set_page_config(
@@ -29,12 +29,18 @@ def get_plate_boundaries_data():
 def get_weekly_report():
     return load_weekly_report()
 
+@st.cache_data
+def get_yearly_report():
+    return load_yearly_report()
+
+
 
 # Load Data (cached)
 earthquakes_df, start_date = get_earthquake_data()
 plate_boundaries = get_plate_boundaries_data()
 earthquakes_with_plates = get_tectonic_plate_data(earthquakes_df)[:10]
 volcanic_weekly_report = get_weekly_report()
+volcanic_yearly_report = get_yearly_report()
 
 
 ## Header
@@ -45,7 +51,7 @@ st.subheader("Real-Time Monitoring + Historical Insights 🌋🌍💥")
 ######### MAP
 
 # Initialize Map (existing code)
-m = folium.Map(location=[20, 10], zoom_start=2, min_zoom=2, tiles="https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}", attr="Esri Topo")
+m = folium.Map(location=[20, 10], zoom_start=2, min_zoom=2, tiles="Esri.WorldImagery")
 
 # Add tectonic plates (existing code)
 if not plate_boundaries.empty:
@@ -173,4 +179,27 @@ with col2:
 st.divider()
 
 ######### MOST RECENT VOLCANIC ACTIVITY
-st.dataframe(volcanic_weekly_report)
+# Get the most recent volcano
+most_recent_volcano = volcanic_weekly_report.iloc[0]["volcano_name"]
+most_recent_startdate = volcanic_weekly_report.iloc[0]["start_date"]
+most_recent_status = volcanic_weekly_report.iloc[0]["report_status"]
+most_recent_volcano_image = volcanic_weekly_report.iloc[0]["volcano_image"]
+most_recent_volcano_type = volcanic_weekly_report.iloc[0]["volcano_type"]
+most_recent_elevation = volcanic_weekly_report.iloc[0]["elevation"]
+
+st.markdown(f"### ({most_recent_status}) - Most recent volanic eruption is from **{most_recent_volcano}**")
+st.subheader(f"{most_recent_startdate}")
+
+# Create a multi-column layout
+col1, col2 = st.columns([1, 2])
+
+with col1:
+    st.metric(label="Primary type", value=f"{most_recent_volcano_type}", border=True)
+    st.metric(label="Elevation", value=f"{most_recent_elevation} m", border=True)
+    st.image(most_recent_volcano_image)
+
+with col2:
+    st.map(pd.DataFrame({
+            "lat": [volcanic_weekly_report.iloc[0]['latitude']],
+            "lon": [volcanic_weekly_report.iloc[0]['longitude']]
+        }), zoom=5, height=490)

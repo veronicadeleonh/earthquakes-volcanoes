@@ -4,11 +4,11 @@ _Visualizing tectonic activity with live data and historical context_
 
 ![Dashboard Screenshot](https://i.imgur.com/example.png)
 
-## 📌 Overview
+## Overview
 
 An interactive map tracking **seismic activity** and **volcanic eruptions** worldwide, highlighting their relationship with tectonic plates. Perfect for researchers, educators, and geology enthusiasts.
 
-## ✨ Key Features
+## Key Features
 
 | Feature                     | Description                                                              |
 | --------------------------- | ------------------------------------------------------------------------ |
@@ -18,7 +18,7 @@ An interactive map tracking **seismic activity** and **volcanic eruptions** worl
 | 📊 **Interactive Markers**  | Color-scaled circles (quakes) ▲ Triangles (volcanoes)                    |
 | 🎨 **Multiple Themes**      | Dark, Satellite, Topographic, and minimalist styles                      |
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 ```python
 Folium        → Dynamic map rendering
@@ -29,7 +29,7 @@ USGS API      → Real-time earthquake data
 BeautifulSoup → Scrap Reports from the Global Volcanism Program
 ```
 
-## 🚀 Quick Start
+## Quick Start
 
 1. Clone the repo:
 
@@ -49,21 +49,21 @@ pip install -r requirements.txt
 streamlit run 0_🌍_Overview.py
 ```
 
-## 🌍 Data Sources
+## Data Sources
 
 Earthquakes:
 
-- ![USGS Earthquake API](https://earthquake.usgs.gov/fdsnws/event/1/query")
+- [USGS Earthquake API](https://earthquake.usgs.gov/fdsnws/event/1/query")
 
 Volcanoes:
 
-- ![Smithsonian GVP](https://volcano.si.edu/) data through 2020
-- ![Volcano Eruptions](https://www.kaggle.com/jessemostipak/volcano-eruptions)
-- ![The Volcanoes on Earth](https://www.kaggle.com/deepcontractor/the-volcanoes-of-earth)
+- [Smithsonian GVP](https://volcano.si.edu/) data through 2020
+- [Volcano Eruptions](https://www.kaggle.com/jessemostipak/volcano-eruptions)
+- [The Volcanoes on Earth](https://www.kaggle.com/deepcontractor/the-volcanoes-of-earth)
 
 Tectonic Plates: ![Github Repository](https://github.com/fraxen/tectonicplates/tree/master)
 
-## 🖼️ Visualization Examples
+## Visualization Examples
 
 | Feature              | Screenshot                                    | Description                                                                               |
 | -------------------- | --------------------------------------------- | ----------------------------------------------------------------------------------------- |

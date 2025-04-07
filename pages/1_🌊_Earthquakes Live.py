@@ -70,7 +70,7 @@ if not plate_boundaries.empty:
         plate_boundaries,
         name="Tectonic Plates",
         style_function=lambda feature: {
-            "color": "blue",
+            "color": "lightblue",
             "weight": 1,
             "opacity": 0.5,
         },

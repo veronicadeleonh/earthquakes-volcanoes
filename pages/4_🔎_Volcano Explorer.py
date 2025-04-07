@@ -61,7 +61,7 @@ if search_term:
         st.map(pd.DataFrame({
             "lat": [volcano['latitude']],
             "lon": [volcano['longitude']]
-        }), zoom=5)
+        }), zoom=5, height=410)
     
     # Historical Eruption Visualization
     st.subheader("Eruption History")

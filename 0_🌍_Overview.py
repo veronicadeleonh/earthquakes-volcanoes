@@ -45,11 +45,17 @@ volcanic_yearly_report = get_yearly_report()
 
 ## Header
 st.title("Earthquakes & Volcanoes")
-st.subheader("Real-Time Monitoring + Historical Insights 🌋🌍💥")
+st.markdown("""
+    This interactive dashboard bridges real-time monitoring with historical analysis of Earth's most powerful geological events. Track live seismic activity (via USGS API) and global volcanic eruptions (via GVP data), explore historical trends, and visualize patterns across tectonic boundaries. Scientists, researchers, and hazard preparedness teams can use these tools to:  
+    - Monitor current seismic/volcanic activity with filtering capabilities
+    - Analyze eruption magnitude (VEI) and frequency trends
+    - Explore geological profiles of active volcanoes
+    - Correlate events with tectonic plate boundaries  
+    """)
 
 
 ######### MAP
-
+st.subheader("Live Geological Activity: Last 10 Eruptions & Earthquakes 🌋🌍💥")
 # Initialize Map (existing code)
 m = folium.Map(location=[20, 10], zoom_start=2, min_zoom=2, tiles="Esri.WorldImagery")
 

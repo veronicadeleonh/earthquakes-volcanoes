@@ -1,4 +1,4 @@
-# 🌋 Real-Time Earthquakes & Volcanic Eruptions Monitor
+# 🌋 Global Volcanic & Seismic Activity Monitor
 
 _Visualizing tectonic activity with live data and historical context_
 

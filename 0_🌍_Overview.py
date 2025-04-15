@@ -159,8 +159,8 @@ most_recent_mag = earthquakes_with_plates.iloc[0]["mag"]
 most_recent_depth = earthquakes_with_plates.iloc[0]["depth"]
 most_recent_plate = earthquakes_with_plates.iloc[0]["tectonic_plate"]
 
-st.markdown(f"Most recent seismic activity registered was on **{most_recent_datetime}**")
-st.subheader(f"{most_recent_place}")
+st.markdown(f"### The most recent seismic activity was registered **{most_recent_place}**")
+st.subheader(f"On {most_recent_datetime}")
 
 # Create a multi-column layout
 col1, col2 = st.columns([1, 2])
@@ -187,7 +187,7 @@ most_recent_volcano_image = volcanic_weekly_report.iloc[0]["volcano_image"]
 most_recent_volcano_type = volcanic_weekly_report.iloc[0]["volcano_type"]
 most_recent_elevation = volcanic_weekly_report.iloc[0]["elevation"]
 
-st.markdown(f"### ({most_recent_status}) - Most recent volanic eruption is from **{most_recent_volcano}**")
+st.markdown(f"### ({most_recent_status}) **{most_recent_volcano}**'s eruption is the latest one being registered")
 st.subheader(f"{most_recent_startdate}")
 
 # Create a multi-column layout

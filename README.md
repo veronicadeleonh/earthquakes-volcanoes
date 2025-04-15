@@ -57,11 +57,13 @@ Earthquakes:
 
 Volcanoes:
 
-- [Smithsonian GVP](https://volcano.si.edu/) data through 2020
+- [Smithsonian GVP](https://volcano.si.edu/)
 - [Volcano Eruptions](https://www.kaggle.com/jessemostipak/volcano-eruptions)
 - [The Volcanoes on Earth](https://www.kaggle.com/deepcontractor/the-volcanoes-of-earth)
 
-Tectonic Plates: ![Github Repository](https://github.com/fraxen/tectonicplates/tree/master)
+Tectonic Plates:
+
+- [Github Repository](https://github.com/fraxen/tectonicplates/tree/master)
 
 ## Visualization Examples
 

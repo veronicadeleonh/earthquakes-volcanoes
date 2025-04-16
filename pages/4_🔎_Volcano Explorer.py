@@ -245,7 +245,6 @@ else:
 #------ Sidebar
 with st.sidebar:
     st.markdown("## Data Attribution")
-    st.image("https://volcano.si.edu/includes/images/GVP_logo.png", width=200)
     st.markdown("""
     - [Smithsonian GVP](https://volcano.si.edu/) data through 2020
     - Kaggle merged datasets

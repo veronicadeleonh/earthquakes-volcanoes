@@ -210,9 +210,9 @@ with col2:
     
     # Display the colorbar
     st.pyplot(fig)
-
-    
+        
     st.write("Darker circles indicate higher magnitude earthquakes.")
+
 
 col1, col2 = st.columns([1,1])  # 3:1 ratio (map:legend)
 
@@ -271,10 +271,23 @@ with col1:
     st.metric(label="Tectonic Plate", value=f"{most_recent_plate}", border=True)
 
 with col2:
-    st.map(pd.DataFrame({
-            "lat": [earthquakes_with_plates.iloc[0]['latitude']],
-            "lon": [earthquakes_with_plates.iloc[0]['longitude']]
-        }), zoom=5, height=350)
+        # Create a light-themed Folium map
+    m = folium.Map(
+        location=[earthquakes_with_plates.iloc[0]['latitude'], earthquakes_with_plates.iloc[0]['longitude']],
+        tiles="OpenStreetMap",  # Light theme
+        zoom_start=5
+    )
+    # Add a marker for the volcano
+    folium.CircleMarker(
+        [earthquakes_with_plates.iloc[0]['latitude'], earthquakes_with_plates.iloc[0]['longitude']],
+        radius=3,  # Larger circles for bigger quakes
+        color='red',
+        fill=True,
+        fill_color='red',
+        fill_opacity=1
+    ).add_to(m)
+    # Display the map (height matches the image)
+    st_folium(m, height=348, width='100%')  # Adjust width as needed
 
 st.divider()
 
@@ -296,10 +309,24 @@ col1, col2 = st.columns([1, 2])
 with col1:
     st.metric(label="Primary type", value=f"{most_recent_volcano_type}", border=True)
     st.metric(label="Elevation", value=f"{most_recent_elevation} m", border=True)
-    st.image(most_recent_volcano_image)
+    st.image(most_recent_volcano_image, use_container_width=True)
 
 with col2:
-    st.map(pd.DataFrame({
-            "lat": [volcanic_weekly_report.iloc[0]['latitude']],
-            "lon": [volcanic_weekly_report.iloc[0]['longitude']]
-        }), zoom=5, height=490)
+    # Create a light-themed Folium map
+    m = folium.Map(
+        location=[volcanic_weekly_report.iloc[0]['latitude'], volcanic_weekly_report.iloc[0]['longitude']],
+        tiles="OpenStreetMap",  # Light theme
+        zoom_start=5
+    )
+    # Add a marker for the volcano
+    folium.CircleMarker(
+        [volcanic_weekly_report.iloc[0]['latitude'], volcanic_weekly_report.iloc[0]['longitude']],
+        radius=3,  # Larger circles for bigger quakes
+        color='red',
+        fill=True,
+        fill_color='red',
+        fill_opacity=1,
+        tooltip="Volcano Location"
+    ).add_to(m)
+    # Display the map (height matches the image)
+    st_folium(m, height=517, width='100%')  # Adjust width as needed

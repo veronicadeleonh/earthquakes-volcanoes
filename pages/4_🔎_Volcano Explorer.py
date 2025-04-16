@@ -26,7 +26,7 @@ def get_first_and_last_eruption_year():
 
 first_and_last_eruption_year = get_first_and_last_eruption_year()
 
-# --- Volcano explorer ---
+st.warning('Page under construction', icon="🚧")
 
 # App
 st.title("🌋 Advanced Volcano Explorer")

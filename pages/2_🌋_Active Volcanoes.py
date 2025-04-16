@@ -47,6 +47,7 @@ def color_report_status(val):
         return 'background-color: #d3d3d3; color: #000'
     return ''
 
+st.warning('Page under construction', icon="🚧")
 
 ################ Yearly Report
 st.title("🌋 Eruptions Report in 2025")

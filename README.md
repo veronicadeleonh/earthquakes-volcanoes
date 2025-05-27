@@ -2,7 +2,7 @@
 
 _Visualizing tectonic activity with live data and historical context_
 
-![Dashboard Screenshot](https://i.imgur.com/example.png)
+![Global volcanic eruption data](images/global-volcanic-eruption-data.png)
 
 ## Overview
 
@@ -67,7 +67,6 @@ Tectonic Plates:
 
 ## Screenshots
 
-![Global volcanic eruption data](images/global-volcanic-eruption-data.png)
 ![Last 10 eruptions and earthquakes](images/last-10-eruptions-and-earthquakes.png)
 ![Top 10 seismic activity by maginitude and depth](images/last-10-eruptions-and-earthquakes.png)
 ![Earthquake depth vs magnitude by tectonic plate](images/earthquake-depth-vs-mag-by-tectonic-plate.png)

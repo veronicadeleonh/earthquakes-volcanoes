@@ -1,8 +1,7 @@
 # 🌋 Global Volcanic & Seismic Activity Monitor
 
-_Visualizing tectonic activity with live data and historical context_
-
-![Global volcanic eruption data](images/global-volcanic-eruption-data.png)
+![Last 10 eruptions and earthquakes](images/last-10-eruptions-and-earthquakes.png)
+_Visualizing the most recent geololigal activity_
 
 ## Overview
 
@@ -67,6 +66,11 @@ Tectonic Plates:
 
 ## Screenshots
 
-![Last 10 eruptions and earthquakes](images/last-10-eruptions-and-earthquakes.png)
-![Top 10 seismic activity by maginitude and depth](images/last-10-eruptions-and-earthquakes.png)
+![Global volcanic eruption data](images/global-volcanic-eruption-data.png)
+_Visualizing tectonic activity with live data and historical context_
+
+![Top 10 seismic activity by maginitude and depth](images/top-10-seismic-activity-by-mag-and-depth.png)
+_Ranking the recent seismic activity by magnitude and depth_
+
 ![Earthquake depth vs magnitude by tectonic plate](images/earthquake-depth-vs-mag-by-tectonic-plate.png)
+_Visualizing earthquakes depth and magnitude by tectonic plate_

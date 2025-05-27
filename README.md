@@ -67,30 +67,4 @@ Tectonic Plates:
 
 ## Visualization Examples
 
-| Feature              | Screenshot                                    | Description                                                                               |
-| -------------------- | --------------------------------------------- | ----------------------------------------------------------------------------------------- |
-| **Earthquakes**      | ![Quakes](https://i.imgur.com/quake.png)      | - Circle markers scaled by magnitude<br>- Depth shown via popup<br>- Real-time USGS data  |
-| **Volcanoes**        | ![Volcanoes](https://i.imgur.com/volcano.png) | - ▲ Triangles colored by status<br>- Weekly Smithsonian updates<br>- Elevation in tooltip |
-| **Tectonic Context** | ![Plates](https://i.imgur.com/plates.png)     | - Plate boundaries in GeoJSON<br>- Customizable opacity<br>- Named plate regions          |
-
-### Earthquake Monitoring
-
-![Earthquake Map](https://i.imgur.com/quake_example.png)
-
-- **Color-scaled circles**: Magnitude (Mw) from yellow (M2.5) to red (M8+)
-- **Popup details**: Location, depth, tectonic plate
-- **Ring of Fire** highlighted in red dashes
-
-### Volcanic Activity
-
-![Volcano Map](https://i.imgur.com/volcano_example.png)
-
-- **Triangular markers**: ▲ Colored by alert level (Green/Yellow/Orange/Red)
-- **Popup details**: Last eruption date, elevation, activity description
-
-### Combined View
-
-![Combined Map](https://i.imgur.com/combined_example.png)
-
-- **Plate boundaries**: Light blue transparent overlay
-- **Legend**: Interactive toggle for earthquakes/volcanoes
+![alt text](images/global-volcanic-eruption-data.png)

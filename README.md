@@ -1,4 +1,4 @@
-# 🌋 Global Volcanic & Seismic Activity Monitor
+# 🌋 Volcano & Earthquake Dashboard
 
 ![Last 10 eruptions and earthquakes](images/last-10-eruptions-and-earthquakes.png)
 _Visualizing the most recent geololigal activity_

@@ -19,16 +19,26 @@ def load_earthquake_data():
     min_magnitude = 3
 
     while True:
-        url = f"{base_url}?format=geojson&starttime={start_date.strftime('%Y-%m-%d')}&endtime={end_date}&minmagnitude={min_magnitude}"
+        url = f"{base_url}?format=geojson&starttime={start_date.strftime('%Y-%m-%d')}&endtime={end_date}&minmagnitude={min_magnitude}&limit=2000"
         response = requests.get(url)
-        data = response.json()
-        
+
+        if not response.ok:
+            # Move start date forward to reduce results and retry
+            start_date += timedelta(days=30)
+            continue
+
+        try:
+            data = response.json()
+        except Exception:
+            start_date += timedelta(days=30)
+            continue
+
         if 'features' not in data:
             raise ValueError("No 'features' key in the API response. Check the API URL or parameters.")
-        
+
         if len(data['features']) <= 2000:
             break  # Exit the loop if the data is within the limit
-        
+
         # Move start date forward to reduce results
         start_date += timedelta(days=30)
 

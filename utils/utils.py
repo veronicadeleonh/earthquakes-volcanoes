@@ -1,15 +1,28 @@
 from datetime import datetime, timedelta
 import requests
+import base64
 import geopandas as gpd
 from shapely.geometry import Point
 import pandas as pd
 import streamlit as st
 import kagglehub
 import os
-from bs4 import BeautifulSoup
-import re
-import requests
 
+DATA_DIR = os.path.join(os.path.dirname(__file__), "..", "data")
+
+
+@st.cache_data
+def get_image_base64(url):
+    try:
+        headers = {'Referer': 'https://volcano.si.edu/', 'User-Agent': 'Mozilla/5.0'}
+        response = requests.get(url, headers=headers, timeout=10)
+        if response.ok:
+            encoded = base64.b64encode(response.content).decode()
+            ext = url.split('.')[-1].lower()
+            return f"data:image/{ext};base64,{encoded}"
+    except Exception:
+        pass
+    return None
 
 @st.cache_data
 def load_earthquake_data():
@@ -260,52 +273,8 @@ def load_first_and_last_eruption_year(eruptions_and_types):
 
 @st.cache_data
 def scrap_volcanic_weekly_report():
-
-    url = "https://volcano.si.edu/reports_weekly.cfm?vtab=feeds"
-    response = requests.get(url)
-
-    soup = BeautifulSoup(response.content)
-    table = soup.find('table')
-
-    volcano_data = []
-    headers = [th.get_text(strip=True) for th in table.find_all('th')][1:]
-
-    for row in table.find_all('tr')[2:]:  # Skip header row
-        cols = row.find_all(['td', 'th'])
-
-        if len(cols) < len(headers):
-            print("Skipping row: not enough columns")
-            continue
-
-        try:
-            volcano_link = row.find('a', href=re.compile(r'#vn_'))
-            
-            if not volcano_link:
-                print("No volcano link found in this row")
-                continue
-            
-            volcano_id = volcano_link['href'].split('#vn_')[1]
-            volcano_name = volcano_link.get_text(strip=True)
-            start_date = cols[3].get_text(strip=True)
-            
-            report_status = row.find("a", attrs={"data-tooltip": True})
-            report_text = report_status.get_text(strip=True) if report_status else None
-
-            row_data = {
-                'volcano_id': volcano_id,
-                'volcano_name': volcano_name,
-                'start_date': start_date,
-                'report_status': report_text
-            }
-            
-            volcano_data.append(row_data)
-        
-        except Exception as e:
-            print(f"Error processing row: {e}")
-
-    volcanic_weekly_report = pd.DataFrame(volcano_data)
-
-    return volcanic_weekly_report
+    path = os.path.join(DATA_DIR, "weekly_report_raw.csv")
+    return pd.read_csv(path)
 
 
 @st.cache_data
@@ -322,35 +291,10 @@ def load_weekly_report():
 
 @st.cache_data
 def scrap_yearly_report():
-    url = "https://volcano.si.edu/faq/index.cfm?question=eruptionsbyyear&checkyear=2025"
-    response = requests.get(url)
-
-    soup = BeautifulSoup(response.text, 'html.parser')
-
-    # Find the table - you might need to adjust the selector based on the actual page structure
-    table = soup.find('table')
-
-    # Extract table data
-    data = []
-
-    # Get table headers
-    headers = []
-    for th in table.find_all('th'):
-        headers.append(th.text.strip())
-
-    # Get table rows
-    for row in table.find_all('tr')[1:]:  # Skip the header row
-        row_data = []
-        for td in row.find_all('td'):
-            row_data.append(td.text.strip())
-        
-        if row_data:  # Skip empty rows
-            data.append(row_data)
-
-    # Create a DataFrame
-    yearly_report = pd.DataFrame(data, columns=headers)
-    yearly_report.columns = [column.lower() for column in yearly_report.columns]
-    return yearly_report
+    path = os.path.join(DATA_DIR, "yearly_report_raw.csv")
+    df = pd.read_csv(path)
+    df.columns = [col.lower() for col in df.columns]
+    return df
 
 
 @st.cache_data
@@ -362,12 +306,12 @@ def clean_yearly_report():
     df['status'] = 'Over'
     
     # Update status based on the continuing text
-    mask = df[date_column].str.contains('\(continuing\)', regex=True, na=False)
-    df.loc[mask, 'status'] = 'Continuing'
-    
+    mask = df[date_column].str.contains(r'\(continuing\)', regex=True, na=False)
+    df.loc[mask, 'status'] = 'On going'
+
     # Clean up the date strings
     df[date_column] = df[date_column].str.replace(r'\s*\(continuing\)\s*', '', regex=True)
-    
+
     # Count and print how many ongoing eruptions were found
     ongoing_count = df['status'].value_counts().get('On going', 0)
     print(f"Found {ongoing_count} ongoing eruptions")

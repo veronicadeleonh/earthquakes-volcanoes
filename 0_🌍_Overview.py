@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
 import numpy as np
 
-from utils.utils import load_earthquake_data, load_plate_boundaries, get_tectonic_plate_data, load_weekly_report, load_yearly_report
+from utils.utils import load_earthquake_data, load_plate_boundaries, get_tectonic_plate_data, load_weekly_report, load_yearly_report, get_image_base64
 
 # Page Config
 st.set_page_config(
@@ -292,41 +292,45 @@ with col2:
 st.divider()
 
 ######### MOST RECENT VOLCANIC ACTIVITY
-# Get the most recent volcano
-most_recent_volcano = volcanic_weekly_report.iloc[0]["volcano_name"]
-most_recent_startdate = volcanic_weekly_report.iloc[0]["start_date"]
-most_recent_status = volcanic_weekly_report.iloc[0]["report_status"]
-most_recent_volcano_image = volcanic_weekly_report.iloc[0]["volcano_image"]
-most_recent_volcano_type = volcanic_weekly_report.iloc[0]["volcano_type"]
-most_recent_elevation = volcanic_weekly_report.iloc[0]["elevation"]
+if not volcanic_weekly_report.empty:
+    # Get the most recent volcano
+    most_recent_volcano = volcanic_weekly_report.iloc[0]["volcano_name"]
+    most_recent_startdate = volcanic_weekly_report.iloc[0]["start_date"]
+    most_recent_status = volcanic_weekly_report.iloc[0]["report_status"]
+    most_recent_volcano_image = volcanic_weekly_report.iloc[0]["volcano_image"]
+    most_recent_volcano_type = volcanic_weekly_report.iloc[0]["volcano_type"]
+    most_recent_elevation = volcanic_weekly_report.iloc[0]["elevation"]
 
-st.markdown(f"### ({most_recent_status}) **{most_recent_volcano}**'s eruption is the latest one being registered")
-st.subheader(f"{most_recent_startdate}")
+    st.markdown(f"### ({most_recent_status}) **{most_recent_volcano}**'s eruption is the latest one being registered")
+    st.subheader(f"{most_recent_startdate}")
 
-# Create a multi-column layout
-col1, col2 = st.columns([1, 2])
+    # Create a multi-column layout
+    col1, col2 = st.columns([1, 2])
 
-with col1:
-    st.metric(label="Primary type", value=f"{most_recent_volcano_type}", border=True)
-    st.metric(label="Elevation", value=f"{most_recent_elevation} m", border=True)
-    st.image(most_recent_volcano_image, use_container_width=True)
+    with col1:
+        st.metric(label="Primary type", value=f"{most_recent_volcano_type}", border=True)
+        st.metric(label="Elevation", value=f"{most_recent_elevation} m", border=True)
+        img_src = get_image_base64(most_recent_volcano_image) or most_recent_volcano_image
+        st.markdown(f'<img src="{img_src}" style="width:100%; border-radius:8px;">', unsafe_allow_html=True)
 
-with col2:
-    # Create a light-themed Folium map
-    m = folium.Map(
-        location=[volcanic_weekly_report.iloc[0]['latitude'], volcanic_weekly_report.iloc[0]['longitude']],
-        tiles="OpenStreetMap",  # Light theme
-        zoom_start=5
-    )
-    # Add a marker for the volcano
-    folium.CircleMarker(
-        [volcanic_weekly_report.iloc[0]['latitude'], volcanic_weekly_report.iloc[0]['longitude']],
-        radius=3,  # Larger circles for bigger quakes
-        color='red',
-        fill=True,
-        fill_color='red',
-        fill_opacity=1,
-        tooltip="Volcano Location"
-    ).add_to(m)
-    # Display the map (height matches the image)
-    st_folium(m, height=517, width='100%')  # Adjust width as needed
+    with col2:
+        # Create a light-themed Folium map
+        m = folium.Map(
+            location=[volcanic_weekly_report.iloc[0]['latitude'], volcanic_weekly_report.iloc[0]['longitude']],
+            tiles="OpenStreetMap",  # Light theme
+            zoom_start=5
+        )
+        # Add a marker for the volcano
+        folium.CircleMarker(
+            [volcanic_weekly_report.iloc[0]['latitude'], volcanic_weekly_report.iloc[0]['longitude']],
+            radius=3,  # Larger circles for bigger quakes
+            color='red',
+            fill=True,
+            fill_color='red',
+            fill_opacity=1,
+            tooltip="Volcano Location"
+        ).add_to(m)
+        # Display the map (height matches the image)
+        st_folium(m, height=517, width='100%')  # Adjust width as needed
+else:
+    st.info("Volcanic activity data is currently unavailable.")

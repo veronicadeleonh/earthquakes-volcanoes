@@ -4,7 +4,7 @@ import pandas as pd
 import altair as alt
 import numpy as np
 
-from utils.utils import load_eruption_data, load_first_and_last_eruption_year, load_weekly_report, load_yearly_report
+from utils.utils import load_eruption_data, load_first_and_last_eruption_year, load_weekly_report, load_yearly_report, get_image_base64
 
 st.set_page_config(
     layout="wide",
@@ -54,7 +54,8 @@ if search_term:
         st.subheader("Volcano Data")
         st.metric("Elevation", f"{volcano['elevation']} m")
         st.write(f"**Primary Type:** {volcano['volcano_type']}")
-        st.image(volcano['volcano_image'])
+        img_src = get_image_base64(volcano['volcano_image']) or volcano['volcano_image']
+        st.markdown(f'<img src="{img_src}" style="width:100%; border-radius:8px;">', unsafe_allow_html=True)
     
     with col2:
         st.subheader("Location")
